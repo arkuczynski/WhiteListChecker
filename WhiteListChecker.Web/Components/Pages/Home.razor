@@ -1,0 +1,113 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Mvc
+@using WhiteListChecker.Web.Models
+@using WhiteListChecker.Web.Services
+
+@inject IWhiteListService WhiteListService
+
+@attribute [StreamRendering]
+
+<PageTitle>Home</PageTitle>
+<div class="container">
+    <h3>White List Checker</h3>
+    <hr />
+
+    <EditForm Model="CheckByNipData" OnValidSubmit="CheckByNip" FormName="CheckByNipForm">
+        <DataAnnotationsValidator />
+
+        <div class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label for="nip" class="col-form-label">NIP</label>
+            </div>
+
+            <div class="col-sm-4">
+                <InputText id="nip" class="form-control" @bind-Value="CheckByNipData.Nip" />
+                <ValidationMessage For="() => CheckByNipData.Nip" />
+            </div>
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Sprawdź</button>
+            </div>
+        </div>
+    </EditForm>
+
+    <hr />
+
+    @if (isLoading)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+    else if (ViewModel != null)
+    {
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">@ViewModel.Name</h5>
+                <p class="mb-1"><strong>Nip:</strong> @ViewModel.Nip</p>
+                <p class="mb-1"><strong>REGON:</strong> @ViewModel.Regon</p>
+                <p class="mb-1"><strong>Status VAT:</strong> @ViewModel.StatusVat</p>
+                <p class="mb-1"><strong>KRS:</strong> @ViewModel.Krs</p>
+                <p class="mb-1"><strong>Address:</strong> @ViewModel.WorkingAddress</p>
+            </div>
+        </div>
+
+        <div class="mt-3 mb-2">
+            <h5>Account Numbers:</h5>
+        </div>
+        <ul class="list-unstyled">
+            @foreach (var accountNumber in ViewModel.AccountNumbers)
+            {
+                <li>
+                    @accountNumber
+                </li>
+            }
+        </ul>
+    }
+    else
+    {
+        <div class="mt-3 text-muted">Enter NIP and press "Sprawdź".</div>
+    }
+
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    public WhiteListCheckByNipFormData CheckByNipData { get; set; } = new();
+
+    public WhiteListCheckResultVM? ViewModel { get; set; }
+
+    private bool isLoading;
+    private string? errorMessage;
+
+    private async Task CheckByNip()
+    {
+        errorMessage = null;
+        ViewModel = null;
+        isLoading = true;
+
+        try
+        {
+            var apiResponse = await WhiteListService.CheckByNipAsync(CheckByNipData.Nip!);
+
+            if (apiResponse is null)
+            {
+                throw new Exception("No data found for the provided NIP.");
+            }
+
+            ViewModel = apiResponse;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}

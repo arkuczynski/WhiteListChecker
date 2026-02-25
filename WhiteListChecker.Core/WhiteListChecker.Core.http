@@ -1,0 +1,6 @@
+@WhiteListChecker.Core_HostAddress = http://localhost:5209
+
+GET {{WhiteListChecker.Core_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

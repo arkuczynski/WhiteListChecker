@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="WhiteListChecker.Core/WhiteListChecker.Core.csproj" />
+  <Project Path="WhiteListChecker.Web/WhiteListChecker.Web.csproj" />
+</Solution>
